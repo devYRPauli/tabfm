@@ -1977,9 +1977,10 @@ def _predict_step_pytorch(
   device = next(model.parameters()).device
 
   X_t = torch.from_numpy(X_batch).to(device, dtype=torch.float32)
-  y_t = torch.from_numpy(y_batch).to(device)
+  y_t = torch.from_numpy(y_batch)
   if y_t.dtype == torch.float64:
     y_t = y_t.to(torch.float32)
+  y_t = y_t.to(device)
 
   batch_size = X_batch.shape[0]
   train_size_t = torch.full(

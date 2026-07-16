@@ -136,6 +136,29 @@ class PyTorchClassifierRegressorTest(unittest.TestCase):
     self.assertEqual(preds_cached.shape, (10,))
     np.testing.assert_allclose(preds_cached, preds, rtol=1e-5, atol=1e-6)
 
+  def test_regressor_batch_forward_float64_targets_on_mps(self):
+    if not torch.backends.mps.is_available():
+      self.skipTest("MPS is required for this test.")
+
+    class _Model(torch.nn.Module):
+
+      def __init__(self):
+        super().__init__()
+        self.anchor = torch.nn.Parameter(torch.zeros((), device="mps"))
+
+      def forward(self, X, y, train_size, cat_mask=None, d=None):
+        del X, train_size, cat_mask, d
+        return y.unsqueeze(-1) + self.anchor
+
+    reg = TabFMRegressor(model=_Model(), batch_size=1)
+    X = np.zeros((1, 2, 1), dtype=np.float32)
+    y = np.zeros((1, 1), dtype=np.float64)
+
+    preds = reg._batch_forward(X, y)
+
+    self.assertEqual(preds.dtype, np.float32)
+    np.testing.assert_array_equal(preds, [[[-100.0]]])
+
 
 class PyTorchModelPickleTest(unittest.TestCase):
   """The PyTorch model must be picklable.
