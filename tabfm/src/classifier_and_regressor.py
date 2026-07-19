@@ -3430,6 +3430,7 @@ class TabFMRegressor(RegressorMixin, BaseEstimator):
     cat_features = list(range(n_cat))
 
     self.y_scaler_ = StandardScaler()
+    self.y_scaler_.set_output(transform="default")
     y = self.y_scaler_.fit_transform(y.reshape(-1, 1)).flatten()
 
     self.ensemble_generator_ = EnsembleGenerator(
