@@ -28,6 +28,7 @@ except ImportError:
   HAS_JAX = False
 from tabfm.src.classifier_and_regressor import _looks_like_datetime
 from tabfm.src.classifier_and_regressor import CategoricalOrdinalEncoder
+from tabfm.src.classifier_and_regressor import DatetimeTransformer
 from tabfm.src.classifier_and_regressor import EnsembleGenerator
 from tabfm.src.classifier_and_regressor import TabFMClassifier
 from tabfm.src.classifier_and_regressor import TabFMRegressor
@@ -1179,6 +1180,17 @@ class CategoricalOrdinalEncoderTest(absltest.TestCase):
     )
 
     np.testing.assert_array_equal(encoded[:, 0], [-99, -1, 0])
+
+
+class DatetimeTransformerTest(absltest.TestCase):
+
+  def test_all_missing_column_uses_epoch_fill_value(self):
+    X = pd.DataFrame({"ts": pd.to_datetime([None, None, None])})
+
+    transformed = DatetimeTransformer().fit_transform(X)
+
+    self.assertEqual(transformed.shape, (3, 5))
+    self.assertTrue(np.isfinite(transformed).all())
 
 
 class ColumnNameRobustnessTest(absltest.TestCase):

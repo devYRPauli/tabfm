@@ -337,7 +337,10 @@ class DatetimeTransformer(BaseEstimator, TransformerMixin):
       series = pd.to_datetime(
           X.iloc[:, pos], utc=True, errors="coerce", format="mixed"
       )
-      self._fillna_map[pos] = series.mean()
+      fillna_value = series.mean()
+      if pd.isna(fillna_value):
+        fillna_value = pd.Timestamp(0, tz="UTC")
+      self._fillna_map[pos] = fillna_value
     return self
 
   def transform(self, X: Any) -> np.ndarray:
