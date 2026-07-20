@@ -208,6 +208,7 @@ class CategoricalOrdinalEncoder(BaseEstimator, TransformerMixin):
 
     for i in range(n_features):
       col = X[:, i]
+      missing_mask = pd.isna(col)
       cats = self.categories_[i]
       cat_to_idx = {c: idx for idx, c in enumerate(cats)}
       mapped = pd.Series(col).map(cat_to_idx)
@@ -216,7 +217,9 @@ class CategoricalOrdinalEncoder(BaseEstimator, TransformerMixin):
       if mapped.dtype.name == "category":
         mapped = mapped.astype(object)
 
-      # Fill NaNs/Unknowns with unknown_value
+      mapped.loc[missing_mask] = self.encoded_missing_value
+
+      # Fill unknowns with unknown_value
       X_out[:, i] = mapped.fillna(self.unknown_value).values.astype(self.dtype)
 
     return X_out
