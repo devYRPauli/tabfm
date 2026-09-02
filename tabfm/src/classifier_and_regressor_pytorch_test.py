@@ -159,6 +159,47 @@ class PyTorchClassifierRegressorTest(unittest.TestCase):
     self.assertEqual(preds.dtype, np.float32)
     np.testing.assert_array_equal(preds, [[[-100.0]]])
 
+  def test_regressor_context_cache_float64_targets_on_mps(self):
+    if not torch.backends.mps.is_available():
+      self.skipTest("MPS is required for this test.")
+
+    np.random.seed(42)
+    model = pytorch_model.TabFM(
+        embed_dim=8,
+        max_classes=1,
+        col_num_blocks=1,
+        col_nhead=2,
+        col_num_inds=8,
+        row_num_blocks=1,
+        row_nhead=2,
+        row_num_cls=2,
+        icl_num_blocks=1,
+        icl_nhead=2,
+        ff_factor=2,
+        feature_group_size=2,
+        is_classifier=False,
+    ).to("mps")
+
+    reg = TabFMRegressor(
+        model=model,
+        n_estimators=2,
+        batch_size=2,
+        random_state=42,
+        cache_context=True,
+        maybe_quantize_kv_cache=False,
+    )
+
+    X = np.random.rand(10, 3)
+    # numpy's default float dtype is float64, which MPS cannot hold.
+    y = np.random.rand(10)
+
+    # The context prefill runs inside fit(), so the dtype crash lands here.
+    reg.fit(X, y)
+
+    preds = reg.predict(X)
+    self.assertEqual(preds.shape, (10,))
+    self.assertTrue(np.all(np.isfinite(preds)))
+
 
 class PyTorchModelPickleTest(unittest.TestCase):
   """The PyTorch model must be picklable.
