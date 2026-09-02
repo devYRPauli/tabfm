@@ -1181,6 +1181,18 @@ class CategoricalOrdinalEncoderTest(absltest.TestCase):
 
     np.testing.assert_array_equal(encoded[:, 0], [-99, -1, 0])
 
+  def test_inverse_transform_does_not_decode_the_missing_sentinel(self):
+    encoder = CategoricalOrdinalEncoder(
+        unknown_value=-1, encoded_missing_value=-99
+    )
+    encoder.fit(np.array([["known"], ["other"]], dtype=object))
+
+    decoded = encoder.inverse_transform(np.array([[-99], [-1], [0]]))
+
+    self.assertIsNone(decoded[0, 0])
+    self.assertIsNone(decoded[1, 0])
+    self.assertEqual(decoded[2, 0], "known")
+
 
 class DatetimeTransformerTest(absltest.TestCase):
 

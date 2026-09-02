@@ -242,7 +242,9 @@ class CategoricalOrdinalEncoder(BaseEstimator, TransformerMixin):
     for i in range(n_features):
       col = X[:, i]
       cats = self.categories_[i]
-      valid_mask = col != self.unknown_value
+      valid_mask = (col != self.unknown_value) & (
+          col != self.encoded_missing_value
+      )
       if np.any(valid_mask):
         indices = col[valid_mask].astype(int)
         X_out[valid_mask, i] = cats[indices]
